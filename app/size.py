@@ -1,6 +1,8 @@
 
-SIZE_BIG = 'big'
-SIZE_SMALL = 'small'
+
+class Size:
+    SMALL = 'small'
+    BIG = 'big'
 
 def determine_size(height: int, width: int, length: int) -> str:
     height = max(height, 1)
@@ -10,6 +12,6 @@ def determine_size(height: int, width: int, length: int) -> str:
     dimensions_sum = height + width + length
 
     if 0 < dimensions_sum < 30:
-        return SIZE_SMALL
+        return Size.SMALL
     else:
-        return SIZE_BIG
+        return Size.BIG
