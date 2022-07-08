@@ -8,11 +8,6 @@ source ./venv/bin/activate
 pip install requirements.txt
 ````
 
-### run
-````shell
-python3 ./main.py
-````
-
 ### test
 ````shell
 pytest
