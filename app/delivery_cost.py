@@ -1,6 +1,8 @@
 MIN_DELIVERY_COST = 400
-MIN_DELIVERY_LOAD_RATE = 1
+MIN_DELIVERY_LOAD_RATE = 0.8
+MAX_DELIVERY_DISTANCE = 1000
 MAX_DELIVERY_DISTANCE_FOR_FRAGILE_ITEMS = 30
+FRAGILE_DELIVERY_COST = 300
 
 SIZE_COST = {
     'big': 200,
@@ -14,8 +16,10 @@ def _get_distance_cost(distance: int) -> int:
         return 100
     elif 10 < distance <= 30:
         return 200
-    else:
+    elif 30 < distance <= MAX_DELIVERY_DISTANCE:
         return 300
+    else:
+        raise ValueError(f'Delivery distance is more than max: {distance} > {MAX_DELIVERY_DISTANCE}')
 
 
 def _get_size_cost(size: str) -> int:
@@ -40,11 +44,9 @@ def calculate_delivery_cost(distance: int, size: str,
     if fragile:
         assert distance < MAX_DELIVERY_DISTANCE_FOR_FRAGILE_ITEMS, \
             f'Cant deliver fragile items more than {MAX_DELIVERY_DISTANCE_FOR_FRAGILE_ITEMS} km'
-        cost += 300
+        cost += FRAGILE_DELIVERY_COST
 
     assert delivery_load_rate >= MIN_DELIVERY_LOAD_RATE, \
         f"Delivery load rate can't be less than {MIN_DELIVERY_LOAD_RATE}: Yandex should make money"
-
-    delivery_load_rate = max(1, delivery_load_rate)
 
     return max(cost * delivery_load_rate, MIN_DELIVERY_COST)
