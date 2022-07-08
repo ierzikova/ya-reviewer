@@ -1,32 +1,47 @@
-MIN_DELIVERY_COST = 400
-MIN_DELIVERY_LOAD_RATE = 0.8
-MAX_DELIVERY_DISTANCE = 1000
-MAX_DELIVERY_DISTANCE_FOR_FRAGILE_ITEMS = 30
-FRAGILE_DELIVERY_COST = 300
+from config import Config
+from size import Size
 
 SIZE_COST = {
-    'big': 200,
-    'small': 100
+    Size.BIG: 200,
+    Size.SMALL: 100
 }
 
+
+def _get_size_cost(size: str) -> int:
+    """
+    Calculates part of delivery cost for different item sizes.
+    Arguments:
+        size: size.Size: 'small' | 'big'
+    Returns:
+        Part of delivery cost for size
+    """
+
+    try:
+        return SIZE_COST[size]
+    except KeyError:
+        raise ValueError(f'Unexpected size: {size}')
+
+
 def _get_distance_cost(distance: int) -> int:
-    if distance < 2:
+    """
+    Calculates part of delivery cost for different distances.
+    Arguments:
+        distance: kilometers to deliver
+    Returns:
+        Part of delivery cost for distance
+    """
+    if distance < 0:
+        raise ValueError(f'Distance cant be negative: {distance} < 0')
+    elif 0 <= distance <= 2:
         return 50
     elif 2 < distance <= 10:
         return 100
     elif 10 < distance <= 30:
         return 200
-    elif 30 < distance <= MAX_DELIVERY_DISTANCE:
+    elif 30 < distance <= Config.MAX_DELIVERY_DISTANCE:
         return 300
     else:
-        raise ValueError(f'Delivery distance is more than max: {distance} > {MAX_DELIVERY_DISTANCE}')
-
-
-def _get_size_cost(size: str) -> int:
-    try:
-        return SIZE_COST[size]
-    except KeyError:
-        raise ValueError(f'Unexpected size: {size}')
+        raise ValueError(f'Delivery distance is more than max: {distance} > {Config.MAX_DELIVERY_DISTANCE}')
 
 
 def calculate_delivery_cost(distance: int, size: str,
@@ -35,18 +50,18 @@ def calculate_delivery_cost(distance: int, size: str,
     Calculates delivery cost.
     Arguments:
         distance: distance in km
-        size: 'small' | 'big'
+        size: size.Size: 'small' | 'big'
     Returns:
-        The sum of the two integer arguments
+        Calculated delivery cost
     """
     cost = _get_distance_cost(distance) + _get_size_cost(size)
 
     if fragile:
-        assert distance < MAX_DELIVERY_DISTANCE_FOR_FRAGILE_ITEMS, \
-            f'Cant deliver fragile items more than {MAX_DELIVERY_DISTANCE_FOR_FRAGILE_ITEMS} km'
-        cost += FRAGILE_DELIVERY_COST
+        assert distance < Config.MAX_DELIVERY_DISTANCE_FOR_FRAGILE_ITEMS, \
+            f'Cant deliver fragile items more than {Config.MAX_DELIVERY_DISTANCE_FOR_FRAGILE_ITEMS} km'
+        cost += Config.FRAGILE_DELIVERY_COST
 
-    assert delivery_load_rate >= MIN_DELIVERY_LOAD_RATE, \
-        f"Delivery load rate can't be less than {MIN_DELIVERY_LOAD_RATE}: Yandex should make money"
+    assert delivery_load_rate >= Config.MIN_DELIVERY_LOAD_RATE, \
+        f"Delivery load rate can't be less than {Config.MIN_DELIVERY_LOAD_RATE}: Yandex should make money"
 
-    return max(cost * delivery_load_rate, MIN_DELIVERY_COST)
+    return max(cost * delivery_load_rate, Config.MIN_DELIVERY_COST)

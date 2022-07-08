@@ -1,5 +1,3 @@
-
-
 class Size:
     SMALL = 'small'
     BIG = 'big'
