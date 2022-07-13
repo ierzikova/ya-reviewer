@@ -1,6 +1,19 @@
 from config import Config
+from constants import LoadState
 from item import Item
+import random
 
+def get_current_delivery_load() -> str:
+    '''
+    Returns current delivery load state.
+    Might be some logic here...
+    '''
+    return random.choice([
+        LoadState.NORMAL,
+        LoadState.HEIGHTENED,
+        LoadState.HIGH,
+        LoadState.OVERLOADED
+    ])
 
 def _get_size_cost(size: str) -> int:
     """

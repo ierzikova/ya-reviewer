@@ -1,6 +1,6 @@
-from delivery_cost import calculate_delivery_cost, _get_size_cost, _get_distance_cost, _get_delivery_load_rate
-from item import Size, Item
-from delivery_load import LoadState
+from delivery import calculate_delivery_cost, _get_size_cost, _get_distance_cost, _get_delivery_load_rate
+from item import Item
+from delivery import LoadState
 from config import Config
 import pytest
 
@@ -24,9 +24,9 @@ class TestDeliveryCost:
         assert cost == expected_cost, 'Cost should depend of item size, cost and delivery_load'
 
     def test_calculate_delivery_cost_returns_min_cost_when_cost_is_less(self, mocker):
-        mocker.patch('delivery_cost._get_distance_cost', return_value=1)
-        mocker.patch('delivery_cost._get_size_cost', return_value=1)
-        mocker.patch('delivery_cost._get_delivery_load_rate', return_value=1)
+        mocker.patch('delivery._get_distance_cost', return_value=1)
+        mocker.patch('delivery._get_size_cost', return_value=1)
+        mocker.patch('delivery._get_delivery_load_rate', return_value=1)
         cost = calculate_delivery_cost(1, Item.random(), delivery_load=LoadState.NORMAL)
         assert cost == Config.MIN_DELIVERY_COST, 'Should not return cost less than minimum delivery cost'
 

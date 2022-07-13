@@ -1,5 +1,4 @@
-from item import Size
-from delivery_load import LoadState
+from constants import Size, LoadState
 
 class Config:
     MAX_DELIVERY_DISTANCE = 1000

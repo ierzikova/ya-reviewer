@@ -1,8 +1,5 @@
 from random import choice
-
-class Size:
-    SMALL = 'small'
-    BIG = 'big'
+from constants import Size
 
 class Item:
 
