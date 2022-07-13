@@ -17,5 +17,11 @@ jobs:
     - name: Install dependencies
       run: make install
 
-    - name: Run tests with coverage report
+    - name: Run tests
+      run: make test
+
+    - name: Create coverage report
       run: make coverage
+
+    - name: Cleanup
+      run: make clean

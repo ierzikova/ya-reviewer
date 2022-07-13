@@ -7,7 +7,7 @@ install:
 	$(PIP) install -r requirements.txt
 
 test:
-	pytest
+	pytest -v
 
 coverage:
 	$(PYTHON) -m coverage run -m pytest
