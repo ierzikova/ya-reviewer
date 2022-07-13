@@ -17,4 +17,4 @@ clean:
 	rm -rf __pycache__
 	rm -rf .pytest_cache
 	rm -rf $(VENV)
-	[ ! -e .coverage ] || rm .coverage
+	rm -f .coverage
