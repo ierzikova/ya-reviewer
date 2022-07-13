@@ -1,4 +1,5 @@
 from config import Config
+from item import Item
 
 
 def _get_size_cost(size: str) -> int:
@@ -48,19 +49,18 @@ def _get_delivery_load_rate(load: str) -> float:
     return Config.DELIVERY_LOAD_RATES.get(load)
 
 
-def calculate_delivery_cost(distance: int, size: str,
-                            fragile: bool, delivery_load: str) -> float:
+def calculate_delivery_cost(distance: int, item: Item, delivery_load: str) -> float:
     """
     Calculates delivery cost.
     Arguments:
         distance: distance in km
-        size: size.Size: 'small' | 'big'
+        item: item.Item
     Returns:
         Calculated delivery cost
     """
-    cost = _get_distance_cost(distance) + _get_size_cost(size)
+    cost = _get_distance_cost(distance) + _get_size_cost(item.size)
 
-    if fragile:
+    if item.fragile:
         assert distance < Config.MAX_DELIVERY_DISTANCE_FOR_FRAGILE_ITEMS, \
             f'Cant deliver fragile items more than {Config.MAX_DELIVERY_DISTANCE_FOR_FRAGILE_ITEMS} km'
         cost += Config.FRAGILE_DELIVERY_COST

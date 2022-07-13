@@ -1,5 +1,5 @@
 from delivery_cost import calculate_delivery_cost, _get_size_cost, _get_distance_cost, _get_delivery_load_rate
-from size import Size
+from item import Size, Item
 from delivery_load import LoadState
 from config import Config
 import pytest
@@ -8,42 +8,42 @@ import pytest
 class TestDeliveryCost:
 
     @pytest.mark.parametrize(
-        'distance, size, delivery_load',
+        'distance, item, delivery_load',
         [
-            (2, Size.BIG, LoadState.NORMAL),
-            (45, Size.SMALL, LoadState.HIGH),
-            (132, Size.BIG, LoadState.OVERLOADED),
+            (2, Item.random(), LoadState.NORMAL),
+            (45, Item.random(), LoadState.HIGH),
+            (132, Item.random(), LoadState.OVERLOADED),
         ]
     )
-    def test_calculate_delivery_cost_calculates_cost_with_size_cost_and_load(self, distance, size, delivery_load):
-        cost = calculate_delivery_cost(distance, size, fragile=False, delivery_load=delivery_load)
-        expected_cost = (_get_size_cost(size) + _get_distance_cost(distance)) * _get_delivery_load_rate(delivery_load)
+    def test_calculate_delivery_cost_calculates_cost_with_size_cost_and_load(self, distance, item, delivery_load):
+        cost = calculate_delivery_cost(distance, item, delivery_load=delivery_load)
+        expected_cost = (_get_size_cost(item.size) + _get_distance_cost(distance)) * _get_delivery_load_rate(delivery_load)
         if expected_cost <= Config.MIN_DELIVERY_COST:
             expected_cost = Config.MIN_DELIVERY_COST
 
-        assert cost == expected_cost, 'Cost should depend of size, cost and delivery_load'
+        assert cost == expected_cost, 'Cost should depend of item size, cost and delivery_load'
 
     def test_calculate_delivery_cost_returns_min_cost_when_cost_is_less(self, mocker):
         mocker.patch('delivery_cost._get_distance_cost', return_value=1)
         mocker.patch('delivery_cost._get_size_cost', return_value=1)
         mocker.patch('delivery_cost._get_delivery_load_rate', return_value=1)
-        cost = calculate_delivery_cost(1, Size.SMALL, fragile=False, delivery_load=LoadState.NORMAL)
+        cost = calculate_delivery_cost(1, Item.random(), delivery_load=LoadState.NORMAL)
         assert cost == Config.MIN_DELIVERY_COST, 'Should not return cost less than minimum delivery cost'
 
 
     def test_calculate_delivery_cost_increase_cost_when_fragile_item(self):
         distance = Config.MAX_DELIVERY_DISTANCE_FOR_FRAGILE_ITEMS - 1
-        size = Size.BIG
+        item_fragile = Item.random(fragile=True)
+        item_not_fragile = Item.random(fragile=False)
+
         cost_fragile = calculate_delivery_cost(
             distance,
-            size,
-            fragile=True,
+            item_fragile,
             delivery_load = LoadState.NORMAL
         )
         cost_not_fragile = calculate_delivery_cost(
             distance,
-            size,
-            fragile=False,
+            item_not_fragile,
             delivery_load = LoadState.NORMAL
         )
         assert cost_fragile - cost_not_fragile == Config.FRAGILE_DELIVERY_COST, \
@@ -53,15 +53,7 @@ class TestDeliveryCost:
         with pytest.raises(AssertionError, match=r"Cant deliver fragile items.*"):
             calculate_delivery_cost(
                 Config.MAX_DELIVERY_DISTANCE_FOR_FRAGILE_ITEMS + 1,
-                Size.SMALL,
-                fragile=True,
-                delivery_load = LoadState.NORMAL
-            )
-        with pytest.raises(AssertionError, match=r"Cant deliver fragile items.*"):
-            calculate_delivery_cost(
-                Config.MAX_DELIVERY_DISTANCE_FOR_FRAGILE_ITEMS + 1,
-                Size.BIG,
-                fragile=True,
+                Item.random(fragile=True),
                 delivery_load = LoadState.NORMAL
             )
 
@@ -71,18 +63,16 @@ class TestDeliveryCost:
     )
     def test_calculate_delivery_cost_increases_cost_with_delivery_load_rate(self, load_state, rate):
         distance = 30
-        size = Size.BIG
+        item = Item.random()
 
         cost_normal_delivery_load = calculate_delivery_cost(
             distance,
-            size,
-            fragile=False,
+            item,
             delivery_load=LoadState.NORMAL
         )
         cost_with_delivery_load = calculate_delivery_cost(
             distance,
-            size,
-            fragile=False,
+            item,
             delivery_load=load_state
         )
         assert cost_with_delivery_load / cost_normal_delivery_load == rate, \

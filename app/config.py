@@ -1,4 +1,4 @@
-from size import Size
+from item import Size
 from delivery_load import LoadState
 
 class Config:
