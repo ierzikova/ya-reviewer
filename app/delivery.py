@@ -19,7 +19,7 @@ def _get_size_cost(size: str) -> int:
     """
     Calculates part of delivery cost for different item sizes.
     Arguments:
-        size: size.Size: 'small' | 'big'
+        size: constants.Size
     Returns:
         Part of delivery cost for size
     """
@@ -53,7 +53,7 @@ def _get_delivery_load_rate(load: str) -> float:
     """
     Returns delivery load rate.
     Arguments:
-        load: size.Size: 'small' | 'big'
+        load: constants.LoadState
     Returns:
         Delivery load rate
     """
@@ -74,7 +74,7 @@ def calculate_delivery_cost(distance: int, item: Item, delivery_load: str) -> fl
     cost = _get_distance_cost(distance) + _get_size_cost(item.size)
 
     if item.fragile:
-        assert distance < Config.MAX_DELIVERY_DISTANCE_FOR_FRAGILE_ITEMS, \
+        assert distance <= Config.MAX_DELIVERY_DISTANCE_FOR_FRAGILE_ITEMS, \
             f'Cant deliver fragile items more than {Config.MAX_DELIVERY_DISTANCE_FOR_FRAGILE_ITEMS} km'
         cost += Config.FRAGILE_DELIVERY_COST
 

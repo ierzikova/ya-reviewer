@@ -1,8 +1,8 @@
+import pytest
 from delivery import calculate_delivery_cost, _get_size_cost, _get_distance_cost, _get_delivery_load_rate
 from item import Item
 from delivery import LoadState
 from config import Config
-import pytest
 
 
 class TestDeliveryCost:
