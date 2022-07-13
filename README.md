@@ -12,3 +12,10 @@ pip install requirements.txt
 ````shell
 pytest
 ````
+
+
+### coverage report
+````shell
+coverage report -m
+````
+
