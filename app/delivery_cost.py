@@ -1,10 +1,4 @@
 from config import Config
-from size import Size
-
-SIZE_COST = {
-    Size.BIG: 200,
-    Size.SMALL: 100
-}
 
 
 def _get_size_cost(size: str) -> int:
@@ -15,11 +9,9 @@ def _get_size_cost(size: str) -> int:
     Returns:
         Part of delivery cost for size
     """
-
-    try:
-        return SIZE_COST[size]
-    except KeyError:
+    if size not in Config.SIZE_COST.keys():
         raise ValueError(f'Unexpected size: {size}')
+    return Config.SIZE_COST.get(size)
 
 
 def _get_distance_cost(distance: int) -> int:
@@ -43,9 +35,21 @@ def _get_distance_cost(distance: int) -> int:
     else:
         raise ValueError(f'Delivery distance is more than max: {distance} > {Config.MAX_DELIVERY_DISTANCE}')
 
+def _get_delivery_load_rate(load: str) -> float:
+    """
+    Returns delivery load rate.
+    Arguments:
+        load: size.Size: 'small' | 'big'
+    Returns:
+        Delivery load rate
+    """
+    if load not in Config.DELIVERY_LOAD_RATES.keys():
+        raise ValueError(f'Unexpected load state: {load}')
+    return Config.DELIVERY_LOAD_RATES.get(load)
+
 
 def calculate_delivery_cost(distance: int, size: str,
-                            fragile: bool, delivery_load_rate: float = 1) -> float:
+                            fragile: bool, delivery_load: str) -> float:
     """
     Calculates delivery cost.
     Arguments:
@@ -61,7 +65,6 @@ def calculate_delivery_cost(distance: int, size: str,
             f'Cant deliver fragile items more than {Config.MAX_DELIVERY_DISTANCE_FOR_FRAGILE_ITEMS} km'
         cost += Config.FRAGILE_DELIVERY_COST
 
-    assert delivery_load_rate >= Config.MIN_DELIVERY_LOAD_RATE, \
-        f"Delivery load rate can't be less than {Config.MIN_DELIVERY_LOAD_RATE}: Yandex should make money"
+    delivery_load_rate = _get_delivery_load_rate(delivery_load)
 
     return max(cost * delivery_load_rate, Config.MIN_DELIVERY_COST)

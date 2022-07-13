@@ -16,6 +16,7 @@ pytest
 
 ### coverage report
 ````shell
+coverage run -m pytest
 coverage report -m
 ````
 

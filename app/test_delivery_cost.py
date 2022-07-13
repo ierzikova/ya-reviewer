@@ -1,16 +1,33 @@
-from delivery_cost import calculate_delivery_cost, _get_size_cost, _get_distance_cost
+from delivery_cost import calculate_delivery_cost, _get_size_cost, _get_distance_cost, _get_delivery_load_rate
 from size import Size
+from delivery_load import LoadState
 from config import Config
 import pytest
-from random import randint
 
 
 class TestDeliveryCost:
 
+    @pytest.mark.parametrize(
+        'distance, size, delivery_load',
+        [
+            (2, Size.BIG, LoadState.NORMAL),
+            (45, Size.SMALL, LoadState.HIGH),
+            (132, Size.BIG, LoadState.OVERLOADED),
+        ]
+    )
+    def test_calculate_delivery_cost_calculates_cost_with_size_cost_and_load(self, distance, size, delivery_load):
+        cost = calculate_delivery_cost(distance, size, fragile=False, delivery_load=delivery_load)
+        expected_cost = (_get_size_cost(size) + _get_distance_cost(distance)) * _get_delivery_load_rate(delivery_load)
+        if expected_cost <= Config.MIN_DELIVERY_COST:
+            expected_cost = Config.MIN_DELIVERY_COST
+
+        assert cost == expected_cost, 'Cost should depend of size, cost and delivery_load'
+
     def test_calculate_delivery_cost_returns_min_cost_when_cost_is_less(self, mocker):
         mocker.patch('delivery_cost._get_distance_cost', return_value=1)
         mocker.patch('delivery_cost._get_size_cost', return_value=1)
-        cost = calculate_delivery_cost(1, Size.SMALL, fragile=False)
+        mocker.patch('delivery_cost._get_delivery_load_rate', return_value=1)
+        cost = calculate_delivery_cost(1, Size.SMALL, fragile=False, delivery_load=LoadState.NORMAL)
         assert cost == Config.MIN_DELIVERY_COST, 'Should not return cost less than minimum delivery cost'
 
 
@@ -20,12 +37,14 @@ class TestDeliveryCost:
         cost_fragile = calculate_delivery_cost(
             distance,
             size,
-            fragile=True
+            fragile=True,
+            delivery_load = LoadState.NORMAL
         )
         cost_not_fragile = calculate_delivery_cost(
             distance,
             size,
-            fragile=False
+            fragile=False,
+            delivery_load = LoadState.NORMAL
         )
         assert cost_fragile - cost_not_fragile == Config.FRAGILE_DELIVERY_COST, \
             'Should add fragile delivery cost to total cost'
@@ -35,58 +54,40 @@ class TestDeliveryCost:
             calculate_delivery_cost(
                 Config.MAX_DELIVERY_DISTANCE_FOR_FRAGILE_ITEMS + 1,
                 Size.SMALL,
-                fragile=True
+                fragile=True,
+                delivery_load = LoadState.NORMAL
             )
         with pytest.raises(AssertionError, match=r"Cant deliver fragile items.*"):
             calculate_delivery_cost(
                 Config.MAX_DELIVERY_DISTANCE_FOR_FRAGILE_ITEMS + 1,
                 Size.BIG,
-                fragile=True
+                fragile=True,
+                delivery_load = LoadState.NORMAL
             )
 
-    def test_calculate_delivery_cost_increases_cost_with_delivery_load_rate(self):
+    @pytest.mark.parametrize(
+        "load_state, rate",
+        Config.DELIVERY_LOAD_RATES.items()
+    )
+    def test_calculate_delivery_cost_increases_cost_with_delivery_load_rate(self, load_state, rate):
         distance = 30
         size = Size.BIG
-        high_delivery_load_rate = 1.5
-        cost_regular_delivery_rate = calculate_delivery_cost(
-            distance,
-            size,
-            fragile=False
-        )
-        cost_high_delivery_rate = calculate_delivery_cost(
+
+        cost_normal_delivery_load = calculate_delivery_cost(
             distance,
             size,
             fragile=False,
-            delivery_load_rate=high_delivery_load_rate
+            delivery_load=LoadState.NORMAL
         )
-        assert cost_high_delivery_rate / cost_regular_delivery_rate == high_delivery_load_rate, \
+        cost_with_delivery_load = calculate_delivery_cost(
+            distance,
+            size,
+            fragile=False,
+            delivery_load=load_state
+        )
+        assert cost_with_delivery_load / cost_normal_delivery_load == rate, \
             'Should multiply delivery cost to delivery load rate'
 
-    def test_calculate_delivery_cost_default_delivery_load_rate_is_1(self):
-        distance = 25
-        size = Size.SMALL
-        cost_default_delivery_rate = calculate_delivery_cost(
-            distance,
-            size,
-            fragile=False
-        )
-        cost_expected_delivery_rate = calculate_delivery_cost(
-            distance,
-            size,
-            fragile=False,
-            delivery_load_rate=1
-        )
-        assert cost_default_delivery_rate == cost_expected_delivery_rate, \
-            'Default delivery load rate should be 1'
-
-    def test_calculate_delivery_cost_raises_error_when_delivery_load_rate_less_than_min(self):
-        with pytest.raises(AssertionError, match=r"Delivery load rate can't be less than.*"):
-            calculate_delivery_cost(
-                randint(1, Config.MAX_DELIVERY_DISTANCE),
-                Size.SMALL,
-                fragile=False,
-                delivery_load_rate=Config.MIN_DELIVERY_LOAD_RATE * 0.99
-            )
 
 class TestGetDistanceCost:
     params = [
@@ -119,14 +120,10 @@ class TestGetDistanceCost:
 
 
 class TestGetSizeCost:
-    params = [
-        (Size.SMALL, 100),
-        (Size.BIG, 200)
-    ]
 
     @pytest.mark.parametrize(
         "size, expected_size_cost",
-        params
+        Config.SIZE_COST.items()
     )
     def test_get_size_cost_values(self, size, expected_size_cost):
         size_cost = _get_size_cost(size)
@@ -140,3 +137,20 @@ class TestGetSizeCost:
     def test_get_distance_cost_raises_error_when_distance_is_negative(self):
         with pytest.raises(ValueError, match=r"Distance cant be negative.*"):
             _get_distance_cost(-1)
+
+
+class TestGetDeliveryLoadRate:
+
+    @pytest.mark.parametrize(
+        "load, rate_expected",
+        Config.DELIVERY_LOAD_RATES.items()
+    )
+    def test_get_size_cost_values(self, load, rate_expected):
+        rate = _get_delivery_load_rate(load)
+
+        assert rate == rate_expected, \
+            'Load Rate should be equal expected: values were hardcoded :( '
+
+    def test_get_delivery_load_rate_raises_error_when_unexpected_load_state(self):
+        with pytest.raises(ValueError, match=r"Unexpected load state: .*"):
+            _get_delivery_load_rate('unexisting_load_state')
