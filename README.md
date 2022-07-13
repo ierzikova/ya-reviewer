@@ -1,22 +1,24 @@
 # ya-reviewer
 
 
-### install
+### install dependencies
 ````shell
-python3 -m venv ./venv
-source ./venv/bin/activate 
-pip install requirements.txt
+make install
 ````
 
-### test
+### run tests
 ````shell
-pytest
+make test
 ````
-
 
 ### coverage report
 ````shell
-coverage run -m pytest
-coverage report -m
+make coverage
 ````
+
+### cleanup venv and cache
+````shell
+make clean
+````
+
 

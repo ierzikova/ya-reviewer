@@ -3,17 +3,18 @@ PYTHON = $(VENV)/bin/python3
 PIP = $(VENV)/bin/pip
 
 install:
-    $(PYTHON) -m venv $(VENV)
-    $(PIP) install -r requirements.txt
+	python3 -m venv $(VENV)
+	$(PIP) install -r requirements.txt
 
-test:
-    source $(VENV)/bin/activate
-    pytest
+test: install
+	pytest
 
-coverage:
-    coverage run -m pytest
-    coverage report -m
+coverage: install
+	coverage run -m pytest
+	coverage report -m
 
 clean:
-    rm -rf __pycache__
-    rm -rf $(VENV)
+	rm -rf __pycache__
+	rm -rf .pytest_cache
+	rm -rf $(VENV)
+	[ ! -e .coverage ] || rm .coverage
