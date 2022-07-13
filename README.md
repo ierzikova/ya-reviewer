@@ -1,6 +1,6 @@
 # ya-reviewer
 
-![Makefile CI](https://github.com/ierzikova/ya-reviewer/actions/workflows/makefile.yml/badge.svg)
+![tests](https://github.com/ierzikova/ya-reviewer/actions/workflows/makefile.yml/badge.svg)
 
 ### install dependencies
 ````shell
